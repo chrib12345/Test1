@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+from datetime import datetime
 import yfinance as yf
 
 def fmt(val, prefix="", suffix="", decimals=2, na="N/A"):
@@ -45,6 +46,10 @@ def get_metrics(symbol):
     ticker = yf.Ticker(symbol.upper())
     info = ticker.info
 
+    if not info or info.get("quoteType") is None:
+        print(f"Symbol '{symbol.upper()}' not found. Please check the ticker and try again.")
+        sys.exit(1)
+
     name = info.get("longName") or info.get("shortName") or symbol.upper()
     exchange = info.get("exchange", "")
     sector = info.get("sector", "N/A")
@@ -66,8 +71,11 @@ def get_metrics(symbol):
         change_pct = change / prev_close
     row("Current Price", f"{currency} {fmt(price)}")
     row("Previous Close", f"{currency} {fmt(prev_close)}")
-    direction = "+" if (change or 0) >= 0 else ""
-    row("Day Change", f"{direction}{fmt(change)}  ({direction}{fmt_pct(change_pct)})")
+    if change is None:
+        row("Day Change", "N/A")
+    else:
+        direction = "+" if change >= 0 else ""
+        row("Day Change", f"{direction}{fmt(change)}  ({direction}{fmt_pct(change_pct)})")
     row("52-Week High", f"{currency} {fmt(info.get('fiftyTwoWeekHigh'))}")
     row("52-Week Low",  f"{currency} {fmt(info.get('fiftyTwoWeekLow'))}")
     row("50-Day MA",    f"{currency} {fmt(info.get('fiftyDayAverage'))}")
@@ -122,7 +130,9 @@ def get_metrics(symbol):
     row("Dividend Rate",      fmt(info.get("dividendRate"),  prefix=currency + " "))
     row("Dividend Yield",     fmt_pct(info.get("dividendYield")))
     row("Payout Ratio",       fmt_pct(info.get("payoutRatio")))
-    row("Ex-Dividend Date",   str(info.get("exDividendDate") or "N/A"))
+    ex_div = info.get("exDividendDate")
+    ex_div_str = datetime.fromtimestamp(ex_div).strftime("%Y-%m-%d") if ex_div else "N/A"
+    row("Ex-Dividend Date", ex_div_str)
 
     section("SHARES & OWNERSHIP")
     row("Shares Outstanding",  fmt_large(info.get("sharesOutstanding")).replace("$", ""))
