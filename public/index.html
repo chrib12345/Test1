@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SOTP Builder — Sum-of-the-Parts Excel generator</title>
+<style>
+  :root { --navy:#1f3864; --blue:#2e75b6; --light:#d9e2f3; --ink:#1a1a1a; --muted:#666; --line:#dcdcdc; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:var(--ink); background:#f4f6fa; }
+  header { background:var(--navy); color:#fff; padding:18px 22px; }
+  header h1 { margin:0; font-size:19px; }
+  header p { margin:4px 0 0; font-size:13px; opacity:.85; }
+  main { max-width:1080px; margin:20px auto; padding:0 16px 60px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:16px 18px; margin-bottom:16px; }
+  .card h2 { margin:0 0 12px; font-size:14px; text-transform:uppercase; letter-spacing:.04em; color:var(--navy); border-bottom:2px solid var(--light); padding-bottom:6px; }
+  label { display:block; font-size:12px; color:var(--muted); margin-bottom:3px; }
+  input, select { font:inherit; padding:6px 8px; border:1px solid #c4c9d4; border-radius:5px; width:100%; background:#fff; }
+  input:focus, select:focus { outline:2px solid var(--blue); border-color:var(--blue); }
+  .grid { display:grid; gap:10px 14px; }
+  .g2 { grid-template-columns:repeat(2,1fr); } .g3 { grid-template-columns:repeat(3,1fr); }
+  .g4 { grid-template-columns:repeat(4,1fr); }
+  @media(max-width:760px){ .g3,.g4{grid-template-columns:repeat(2,1fr);} }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  th,td { border:1px solid var(--line); padding:3px 4px; text-align:right; }
+  th { background:var(--light); color:var(--navy); font-weight:600; text-align:center; position:sticky; top:0; }
+  td:first-child, th:first-child { text-align:left; }
+  td input { padding:4px 5px; border:1px solid transparent; background:transparent; }
+  td input:focus { border-color:var(--blue); background:#fff; }
+  .seg-wrap { overflow-x:auto; }
+  .btn { font:inherit; font-weight:600; padding:9px 16px; border-radius:6px; border:1px solid var(--navy); cursor:pointer; }
+  .btn.primary { background:var(--navy); color:#fff; } .btn.primary:hover { background:#16294a; }
+  .btn.ghost { background:#fff; color:var(--navy); } .btn.ghost:hover { background:var(--light); }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .spacer { flex:1; }
+  .hint { font-size:12px; color:var(--muted); }
+  .status { font-size:13px; padding:8px 10px; border-radius:6px; margin-top:10px; display:none; }
+  .status.ok { background:#e6f4ea; color:#176b3a; display:block; }
+  .status.err { background:#fdecea; color:#a3261b; display:block; }
+  .status.info { background:var(--light); color:var(--navy); display:block; }
+  .seg-actions { margin-top:8px; }
+  .mini { font-size:11px; padding:5px 10px; }
+  footer { text-align:center; color:var(--muted); font-size:12px; padding:20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>SOTP Builder</h1>
+  <p>Type a symbol, set the segment inputs, download an 11-sheet Sum-of-the-Parts Excel model. Blue inputs · formula-driven engine.</p>
+</header>
+<main>
+  <div class="card">
+    <div class="row">
+      <div style="min-width:120px"><label>Ticker</label><input id="ticker" value="SPGI" /></div>
+      <div style="min-width:200px"><label>Company</label><input id="company" /></div>
+      <div style="min-width:90px"><label>Exchange</label><input id="exchange" /></div>
+      <div class="spacer"></div>
+      <button class="btn ghost" id="loadSpgi">Load SPGI example</button>
+      <button class="btn ghost" id="blank">Blank template</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn ghost" id="fetchLive">⤓ Fetch live market data</button>
+      <span class="hint">Tries Yahoo for price &amp; 52-wk range; falls back to manual on failure.</span>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div class="card">
+    <h2>Market &amp; Shares</h2>
+    <div class="grid g4">
+      <div><label>Price ($/sh)</label><input id="m_price" type="number" step="0.01" /></div>
+      <div><label>52-wk low</label><input id="m_low" type="number" step="0.01" /></div>
+      <div><label>52-wk high</label><input id="m_high" type="number" step="0.01" /></div>
+      <div><label>Basic shares (M)</label><input id="m_shares" type="number" step="0.1" /></div>
+      <div><label>Other dilutive (M)</label><input id="m_dil" type="number" step="0.1" /></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Segments &amp; Multiples</h2>
+    <div class="seg-wrap">
+      <table id="segTable">
+        <thead><tr>
+          <th>Segment</th><th>Short</th><th>FY rev</th><th>FY op profit</th><th>FY deprec</th>
+          <th>Growth</th><th>Margin bps</th><th>Bear x</th><th>Base x</th><th>Re-Rate x</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="seg-actions"><button class="btn ghost mini" id="addSeg">+ Add segment</button>
+      <span class="hint">Growth as decimal (0.06 = 6%). EBITDA = op profit + deprec (computed in the model).</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Corporate, Minority &amp; Sensitivity Axes</h2>
+    <div class="grid g4">
+      <div><label>FY corp EBITDA ($M, neg)</label><input id="c_fy" type="number" /></div>
+      <div><label>Est corp EBITDA ($M, neg)</label><input id="c_est" type="number" /></div>
+      <div><label>Minority interest (%)</label><input id="c_minpct" type="number" step="0.01" /></div>
+      <div><label>Minority segment</label><select id="c_minseg"></select></div>
+      <div><label>Sensitivity rows = segment</label><select id="s_row"></select></div>
+      <div><label>Sensitivity cols = segment</label><select id="s_col"></select></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Net Debt Build ($M)</h2>
+    <div class="grid g4">
+      <div><label>Short-term debt</label><input id="n_st" type="number" /></div>
+      <div><label>Long-term debt</label><input id="n_lt" type="number" /></div>
+      <div><label>Other debt-like</label><input id="n_other" type="number" /></div>
+      <div><label>Cash</label><input id="n_cash" type="number" /></div>
+      <div><label>Prior ST debt</label><input id="n_pst" type="number" /></div>
+      <div><label>Prior LT debt</label><input id="n_plt" type="number" /></div>
+      <div><label>Stated gross leverage (x)</label><input id="n_lev" type="number" step="0.1" /></div>
+      <div><label>Leverage EBITDA basis</label><input id="n_levb" type="number" /></div>
+      <div><label>Redeemable NCI</label><input id="n_rnci" type="number" /></div>
+      <div><label>Buyback roll-fwd (+)</label><input id="n_buy" type="number" /></div>
+      <div><label>Spin-notes leakage (+)</label><input id="n_leak" type="number" /></div>
+      <div><label>Nonredeemable NCI</label><input id="n_nred" type="number" /></div>
+      <div><label>Separation costs</label><input id="n_sep" type="number" /></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Spin-off (optional)</h2>
+    <div class="row" style="margin-bottom:10px">
+      <label style="margin:0"><input type="checkbox" id="sp_on" style="width:auto"> Enable spin-off entity split</label>
+    </div>
+    <div class="grid g4" id="spinFields">
+      <div><label>Spin segment</label><select id="sp_seg"></select></div>
+      <div><label>Entity name</label><input id="sp_name" /></div>
+      <div><label>Entity ticker</label><input id="sp_tk" /></div>
+      <div><label>Net debt at spin ($M)</label><input id="sp_nd" type="number" /></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <button class="btn primary" id="generate">⬇ Generate Excel</button>
+      <span class="hint">Builds <span id="outname">SPGI_SOTP.xlsx</span> with all 11 sheets, then downloads it.</span>
+    </div>
+    <div id="genstatus" class="status"></div>
+  </div>
+  <footer>Engine reproduces the SPGI master template (Base ties to $485.45/sh). For analysis only — not investment advice.</footer>
+</main>
+
+<script>
+let cfg = null;
+
+const $ = id => document.getElementById(id);
+function num(v){ const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+
+async function loadDefault(){
+  const r = await fetch('/spgi.json'); cfg = await r.json(); render();
+}
+function blankCfg(){
+  const tk = ($('ticker').value || 'TICKER').toUpperCase();
+  cfg = {
+    meta:{ticker:tk, company:'', exchange:'NYSE', est_year:'2026E', fy_actual:'FY2025A', est_year2:'2027E'},
+    market:{price:0, low52:0, high52:0, basic_shares:0, dilutive_shares:0},
+    segments:[ newSeg('Segment 1') ],
+    corporate:{fy_corp_ebitda:0, e_corp_ebitda:0, minority_pct:0, minority_segment:''},
+    net_debt:{st_debt:0,lt_debt:0,other_debt:0,cash:0,prior_st:0,prior_lt:0,stated_leverage:0,
+              leverage_ebitda_basis:0,redeemable_nci:0,buyback_rollfwd:0,notes_leakage:0,
+              nonredeem_nci:0,sep_costs:0,retained_stakes:0,notes_receivable:0},
+    fcf:{}, street:{}, trends:{}, spin:{enabled:false},
+    sensitivity:{}
+  };
+  render();
+}
+function newSeg(name){
+  return {name:name, short:name, fy_revenue:0, fy_op_profit:0, fy_deprec:0, growth:0,
+          margin_bps:0, mult_bear:10, mult_base:12, mult_rerate:14, comps:[]};
+}
+
+function render(){
+  $('ticker').value = cfg.meta.ticker || '';
+  $('company').value = cfg.meta.company || '';
+  $('exchange').value = cfg.meta.exchange || '';
+  const m = cfg.market||{};
+  $('m_price').value=m.price??''; $('m_low').value=m.low52??''; $('m_high').value=m.high52??'';
+  $('m_shares').value=m.basic_shares??''; $('m_dil').value=m.dilutive_shares??'';
+  const c = cfg.corporate||{};
+  $('c_fy').value=c.fy_corp_ebitda??''; $('c_est').value=c.e_corp_ebitda??'';
+  $('c_minpct').value=c.minority_pct??'';
+  const n = cfg.net_debt||{};
+  const map={n_st:'st_debt',n_lt:'lt_debt',n_other:'other_debt',n_cash:'cash',n_pst:'prior_st',
+    n_plt:'prior_lt',n_lev:'stated_leverage',n_levb:'leverage_ebitda_basis',n_rnci:'redeemable_nci',
+    n_buy:'buyback_rollfwd',n_leak:'notes_leakage',n_nred:'nonredeem_nci',n_sep:'sep_costs'};
+  for(const k in map){ $(k).value = n[map[k]]??''; }
+  const sp = cfg.spin||{};
+  $('sp_on').checked = !!sp.enabled; $('sp_name').value=sp.entity_name||'';
+  $('sp_tk').value=sp.entity_ticker||''; $('sp_nd').value=sp.net_debt??'';
+  renderSegs(); refreshSegSelectors();
+  $('outname').textContent = (cfg.meta.ticker||'TICKER')+'_SOTP.xlsx';
+}
+
+function renderSegs(){
+  const tb = $('segTable').querySelector('tbody'); tb.innerHTML='';
+  cfg.segments.forEach((s,i)=>{
+    const tr=document.createElement('tr');
+    const cells=[['name',s.name,'text'],['short',s.short,'text'],['fy_revenue',s.fy_revenue],
+      ['fy_op_profit',s.fy_op_profit],['fy_deprec',s.fy_deprec],['growth',s.growth],
+      ['margin_bps',s.margin_bps],['mult_bear',s.mult_bear],['mult_base',s.mult_base],['mult_rerate',s.mult_rerate]];
+    cells.forEach(([k,v,t])=>{
+      const td=document.createElement('td'); const inp=document.createElement('input');
+      inp.value=v??''; inp.type=t||'number'; if(t!=='text'){inp.step='any';}
+      inp.oninput=()=>{ cfg.segments[i][k] = (t==='text')? inp.value : num(inp.value);
+        if(k==='name'){ refreshSegSelectors(); } };
+      td.appendChild(inp); tr.appendChild(td);
+    });
+    const td=document.createElement('td'); const b=document.createElement('button');
+    b.textContent='✕'; b.className='btn ghost mini'; b.style.padding='2px 7px';
+    b.onclick=()=>{ cfg.segments.splice(i,1); renderSegs(); refreshSegSelectors(); };
+    td.appendChild(b); tr.appendChild(td); tb.appendChild(tr);
+  });
+}
+
+function refreshSegSelectors(){
+  const names = cfg.segments.map(s=>s.name);
+  [['c_minseg',cfg.corporate.minority_segment],['sp_seg',(cfg.spin||{}).segment],
+   ['s_row',(cfg.sensitivity||{}).row_segment],['s_col',(cfg.sensitivity||{}).col_segment]]
+   .forEach(([id,cur])=>{
+     const sel=$(id); sel.innerHTML='';
+     const opt0=document.createElement('option'); opt0.value=''; opt0.textContent='(none)'; sel.appendChild(opt0);
+     names.forEach(nm=>{ const o=document.createElement('option'); o.value=nm; o.textContent=nm;
+       if(nm===cur) o.selected=true; sel.appendChild(o); });
+   });
+}
+
+// collect form -> cfg
+function collect(){
+  cfg.meta.ticker = ($('ticker').value||'TICKER').toUpperCase();
+  cfg.meta.company = $('company').value; cfg.meta.exchange = $('exchange').value;
+  cfg.market = cfg.market||{};
+  cfg.market.price=num($('m_price').value); cfg.market.low52=num($('m_low').value);
+  cfg.market.high52=num($('m_high').value); cfg.market.basic_shares=num($('m_shares').value);
+  cfg.market.dilutive_shares=num($('m_dil').value);
+  cfg.corporate.fy_corp_ebitda=num($('c_fy').value); cfg.corporate.e_corp_ebitda=num($('c_est').value);
+  cfg.corporate.minority_pct=num($('c_minpct').value); cfg.corporate.minority_segment=$('c_minseg').value;
+  const map={n_st:'st_debt',n_lt:'lt_debt',n_other:'other_debt',n_cash:'cash',n_pst:'prior_st',
+    n_plt:'prior_lt',n_lev:'stated_leverage',n_levb:'leverage_ebitda_basis',n_rnci:'redeemable_nci',
+    n_buy:'buyback_rollfwd',n_leak:'notes_leakage',n_nred:'nonredeem_nci',n_sep:'sep_costs'};
+  for(const k in map){ cfg.net_debt[map[k]] = num($(k).value); }
+  cfg.spin = cfg.spin||{};
+  cfg.spin.enabled = $('sp_on').checked;
+  cfg.spin.segment = $('sp_seg').value; cfg.spin.entity_name=$('sp_name').value;
+  cfg.spin.entity_ticker=$('sp_tk').value; cfg.spin.net_debt=num($('sp_nd').value);
+  cfg.sensitivity = cfg.sensitivity||{};
+  cfg.sensitivity.row_segment=$('s_row').value; cfg.sensitivity.col_segment=$('s_col').value;
+  // let server recompute step ladders for edited axes
+  if(!cfg.sensitivity.row_segment){ delete cfg.sensitivity.row_steps; }
+  return cfg;
+}
+
+function setStatus(el,msg,cls){ el.className='status '+cls; el.textContent=msg; }
+
+$('loadSpgi').onclick = loadDefault;
+$('blank').onclick = blankCfg;
+$('addSeg').onclick = ()=>{ cfg.segments.push(newSeg('Segment '+(cfg.segments.length+1))); renderSegs(); refreshSegSelectors(); };
+
+$('fetchLive').onclick = async ()=>{
+  const tk=($('ticker').value||'').toUpperCase(); if(!tk){ return; }
+  setStatus($('status'),'Fetching '+tk+' …','info');
+  try{
+    const r = await fetch('/api/market?ticker='+encodeURIComponent(tk));
+    const d = await r.json();
+    if(d._error || (!d.price)){ setStatus($('status'),'Live fetch unavailable ('+(d._error||'no data')+'). Enter market data manually.','err'); return; }
+    if(d.price) $('m_price').value=d.price;
+    if(d.low52) $('m_low').value=d.low52;
+    if(d.high52) $('m_high').value=d.high52;
+    setStatus($('status'),'Loaded price $'+d.price+(d.low52?(' · 52-wk '+d.low52+'–'+d.high52):'')+'. Review and fill segment inputs.','ok');
+  }catch(e){ setStatus($('status'),'Live fetch failed: '+e+'. Enter market data manually.','err'); }
+};
+
+$('generate').onclick = async ()=>{
+  collect();
+  setStatus($('genstatus'),'Building workbook …','info');
+  try{
+    const r = await fetch('/api/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cfg)});
+    if(!r.ok){ const e=await r.json().catch(()=>({error:r.statusText})); setStatus($('genstatus'),'Error: '+(e.error||r.status),'err'); return; }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=(cfg.meta.ticker||'TICKER')+'_SOTP.xlsx';
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    setStatus($('genstatus'),'Done — downloaded '+(cfg.meta.ticker)+'_SOTP.xlsx (11 sheets).','ok');
+  }catch(e){ setStatus($('genstatus'),'Generation failed: '+e,'err'); }
+};
+
+loadDefault();
+</script>
+</body>
+</html>

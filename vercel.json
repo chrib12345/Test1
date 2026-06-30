@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/generate.py": { "includeFiles": "sotp_generator/**", "maxDuration": 30 },
+    "api/market.py": { "maxDuration": 15 }
+  }
+}
