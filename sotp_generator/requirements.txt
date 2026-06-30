@@ -1,0 +1,10 @@
+# Runtime
+openpyxl>=3.1
+PyYAML>=6.0
+
+# Optional — live data refresh (python sotp.py TICKER --live)
+yfinance>=0.2.40
+requests>=2.31
+
+# Dev / testing — golden-test formula evaluation
+formulas>=1.2
