@@ -1,7 +1,13 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "api/generate.py": { "includeFiles": "sotp_generator/**", "maxDuration": 30 },
-    "api/market.py": { "maxDuration": 15 }
-  }
+  "builds": [
+    { "src": "api/generate.py", "use": "@vercel/python", "config": { "includeFiles": "sotp_generator/**" } },
+    { "src": "api/market.py", "use": "@vercel/python" },
+    { "src": "public/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/generate", "dest": "/api/generate.py" },
+    { "src": "/api/market", "dest": "/api/market.py" },
+    { "src": "/", "dest": "/public/index.html" },
+    { "src": "/(.*)", "dest": "/public/$1" }
+  ]
 }
