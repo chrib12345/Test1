@@ -1,0 +1,213 @@
+# Golden reference config — regenerating this reproduces the uploaded
+# SPGI_5Segment_SOTP.xlsx (engine values tie out under recalculation).
+# This is also the canonical example of a hand-tuned manual-override file.
+meta:
+  ticker: SPGI
+  company: S&P Global Inc.
+  exchange: NYSE
+  as_of: "6/23/2026"
+  fy_actual: FY2025A
+  est_year: 2026E
+  est_year2: 2027E
+  subtitle: "SUM-OF-THE-PARTS VALUATION — 5 SEGMENTS + MOBILITY GLOBAL (NYSE: MBGL) SPIN-OFF"
+  built_on: "Built on master SOTP/Spin template v11  |  Prices as of 6/23/2026 close  |  Mobility Global distribution: July 1, 2026 (1-for-1)"
+  seg_source: "Source: FY2025 earnings release (8-K, 2/10/26)"
+  growth_note: "Company guides 6-8% organic cc; Indices/Ratings stronger, MI lighter (EDM/thinkFolio divested)."
+  methodology: >-
+    Each segment valued on EV / 2026E (NTM) standalone Adj. EBITDA via peer-comp multiples.
+    Segment Adj. EBITDA = reported segment adjusted operating profit + allocated depreciation
+    (acquired-intangible amortization, ~$1.1B/yr, sits at corporate). Corporate/unallocated cost is
+    capitalized at the blended company multiple and deducted. The S&P Dow Jones Indices minority
+    (CME 27%) is deducted at fair value (27% x Indices EV). Mobility Global (MBGL) is valued as the
+    spin entity and carries ~$1.85B net debt at separation.
+  judgment_calls:
+    - "Peer-comp base multiples by segment (Ratings 21.5x, Indices 25x, Market Intel 15x, Commodity 18x, Mobility 14x)."
+    - "2026E segment growth (6-8% org cc guide) and ~+40bps margin; EBITDA bridge from adjusted operating profit + depreciation."
+    - "Net debt marked to spin: 3/31/26 net debt $11,508M + buyback roll-forward + Mobility-notes leakage = ~$12,058M."
+    - "Indices minority (CME 27%) deducted at fair value, not the $4,917M carrying value."
+    - "Mobility net debt at spin ~$1,850M ($2.0B notes less ~$150M retained cash)."
+
+market:
+  price: 400.16
+  low52: 381.61
+  high52: 579.05
+  basic_shares: 294.5
+  dilutive_shares: 0.5
+  shares_est: true
+  price_note: "Daily close 6/23/2026 (SPGI). Stamp as-of date; refresh before delivery."
+  shares_note: "296.0M actual at 3/31/26 (10-Q) rolled forward for Q2 buybacks (est)."
+
+segments:
+  - name: Market Intelligence
+    short: Market Intel
+    fy_revenue: 4916
+    fy_op_profit: 1671
+    fy_deprec: 40
+    growth: 0.05
+    margin_bps: 40
+    mult_bear: 12
+    mult_base: 15
+    mult_rerate: 18
+    comp_anchor_note: "Anchor FactSet/Morningstar ~13-14x"
+    comp_group_title: "anchor FactSet / Morningstar"
+    comps:
+      - {company: FactSet, ticker: FDS, grade: A, weight: 2, price: 218.15, shares: 38, net_debt: 1300, ntm_ebitda: 720, ebitda_margin: 0.37, note: "6/23/26; financial data"}
+      - {company: Morningstar, ticker: MORN, grade: A, weight: 2, price: 156.21, shares: 43, net_debt: 1000, ntm_ebitda: 560, ebitda_margin: 0.25, note: "6/23/26; financial data"}
+      - {company: Thomson Reuters, ticker: TRI, grade: B, weight: 1, price: 80.71, shares: 450, net_debt: 3000, ntm_ebitda: 2600, ebitda_margin: 0.38, note: "6/23/26; info services"}
+  - name: Ratings
+    short: Ratings
+    fy_revenue: 4724
+    fy_op_profit: 3079
+    fy_deprec: 38
+    growth: 0.06
+    margin_bps: 40
+    mult_bear: 18
+    mult_base: 21.5
+    mult_rerate: 24
+    comp_anchor_note: "Anchor Moody's ~23x; slight discount for issuance cyclicality"
+    comp_group_title: "anchor Moody's"
+    comps:
+      - {company: Moody's, ticker: MCO, grade: A, weight: 2, price: 443.97, shares: 179, net_debt: 4100, ntm_ebitda: 3650, ebitda_margin: 0.58, note: "6/23/26; ratings duopoly"}
+      - {company: Fair Isaac, ticker: FICO, grade: B, weight: 0.5, price: 1099.41, shares: 24, net_debt: 2100, ntm_ebitda: 1000, ebitda_margin: 0.58, note: "6/23/26; scores/analytics"}
+  - name: Commodity Insights
+    short: Commodity
+    fy_revenue: 2299
+    fy_op_profit: 1093
+    fy_deprec: 19
+    growth: 0.06
+    margin_bps: 40
+    mult_bear: 15
+    mult_base: 18
+    mult_rerate: 21
+    comp_anchor_note: "Anchor Verisk ~20x; subscription energy/commodity data"
+    comp_group_title: "anchor Verisk"
+    comps:
+      - {company: Verisk Analytics, ticker: VRSK, grade: A, weight: 2, price: 174.76, shares: 140, net_debt: 3000, ntm_ebitda: 1400, ebitda_margin: 0.55, note: "6/23/26; subscription data analytics"}
+      - {company: Thomson Reuters, ticker: TRI, grade: B, weight: 1, price: 80.71, shares: 450, net_debt: 3000, ntm_ebitda: 2600, ebitda_margin: 0.38, note: "6/23/26; info services (context)"}
+  - name: Mobility
+    short: Mobility
+    fy_revenue: 1747
+    fy_op_profit: 697
+    fy_deprec: 14
+    growth: 0.08
+    margin_bps: 40
+    mult_bear: 12
+    mult_base: 14
+    mult_rerate: 16.5
+    comp_anchor_note: "Verisk/credit bureaus/auto 12-20x; leverage + auto cyclicality discount"
+    comp_group_title: "data + auto"
+    comps:
+      - {company: Verisk Analytics, ticker: VRSK, grade: A, weight: 2, price: 174.76, shares: 140, net_debt: 3000, ntm_ebitda: 1400, ebitda_margin: 0.55, note: "6/23/26; data analytics anchor"}
+      - {company: TransUnion, ticker: TRU, grade: B, weight: 1, price: 65.96, shares: 195, net_debt: 5100, ntm_ebitda: 1450, ebitda_margin: 0.38, note: "6/23/26; consumer data"}
+      - {company: Equifax, ticker: EFX, grade: B, weight: 1, price: 152.53, shares: 124, net_debt: 5000, ntm_ebitda: 1850, ebitda_margin: 0.33, note: "6/23/26; consumer data"}
+      - {company: CarGurus, ticker: CARG, grade: B, weight: 0.5, price: 30.44, shares: 100, net_debt: -200, ntm_ebitda: 200, ebitda_margin: 0.12, note: "6/23/26; auto marketplace"}
+  - name: S&P DJ Indices
+    short: Indices
+    fy_revenue: 1850
+    fy_op_profit: 1313
+    fy_deprec: 15
+    growth: 0.11
+    margin_bps: 40
+    mult_bear: 21
+    mult_base: 25
+    mult_rerate: 29
+    comp_anchor_note: "Anchor MSCI ~27x; premium index franchise"
+    comp_group_title: "anchor MSCI"
+    comps:
+      - {company: MSCI, ticker: MSCI, grade: A, weight: 2, price: 581.51, shares: 77, net_debt: 4500, ntm_ebitda: 1850, ebitda_margin: 0.62, note: "6/23/26; index anchor"}
+      - {company: CME Group, ticker: CME, grade: B, weight: 1, price: 242.26, shares: 360, net_debt: -1000, ntm_ebitda: 4050, ebitda_margin: 0.68, note: "6/23/26; net cash; exchange/index"}
+      - {company: Intercontinental Exch, ticker: ICE, grade: B, weight: 0.5, price: 133, shares: 574, net_debt: 19000, ntm_ebitda: 5400, ebitda_margin: 0.58, note: "6/23/26; exchange/data"}
+      - {company: Nasdaq, ticker: NDAQ, grade: C, weight: 0.5, price: 82.49, shares: 575, net_debt: 9200, ntm_ebitda: 2850, ebitda_margin: 0.55, note: "6/23/26; exchange/index/data"}
+
+corporate:
+  fy_corp_ebitda: -123
+  e_corp_ebitda: -130
+  minority_pct: 0.27
+  minority_segment: S&P DJ Indices
+  corp_note: "Segments adj op profit $7,853M less company-wide $7,730M = ~$123M corporate."
+  minority_note: "CME owns 27% of S&P Dow Jones Indices; deducted at fair value (27% x Indices EV)."
+
+net_debt:
+  bs_date: "3/31/2026 (Q1'26 10-Q)"
+  prior_date: "12/31/25"
+  st_debt: 2697
+  lt_debt: 10621
+  other_debt: 0
+  cash: 1810
+  prior_st: 718
+  prior_lt: 12370
+  stated_leverage: 2.3
+  leverage_ebitda_basis: 7930
+  redeemable_nci: 4917
+  buyback_rollfwd: 400
+  notes_leakage: 150
+  nonredeem_nci: 115
+  sep_costs: 100
+  retained_stakes: 0
+  notes_receivable: 0
+
+spin:
+  enabled: true
+  segment: Mobility
+  entity_name: Mobility Global
+  entity_ticker: MBGL
+  net_debt: 1850
+  net_debt_note: "Form 10: $2.0B notes less ~$150M retained cash = ~$1.85B (~2.6x)."
+  structure: "Tax-free pro rata spin-off of the Mobility division into Mobility Global Inc. (NYSE: MBGL); 1 MBGL share per SPGI share."
+  timeline: "Separation approved 5/21/26; record date 6/15/26; when-issued MBGL WI ~6/26-30; distribution 7/1/26 (12:01am)."
+  businesses: "CARFAX, Polk, automotiveMastermind, Market Scan — automotive data/analytics; >80% subscription revenue."
+  financials: "2025: ~$1,750M revenue, $711M adj EBITDA, $461M FCF. LTM (3/31/26) adj EBITDA ~$724M."
+  capitalization: "$2.0B senior notes ($650M 5.05% '29, $650M 5.45% '31, $700M 6.05% '36) + $500M revolver; ~$111M annual interest. ~$150M cash retained -> ~$1.85B net debt (~2.6x)."
+  proceeds: "Notes proceeds largely paid to SPGI parent as consideration for transferred assets; remainder for separation costs."
+  parent_bs: "Cash $1,810M; ST debt $2,697M; LT debt $10,621M (gross $13,318M; net $11,508M). Redeemable NCI $4,917M = CME 27% of S&P DJ Indices."
+  leverage_tie: "(Gross debt + redeemable NCI)/FY25 adj EBITDA ~2.3x = stated gross leverage. NCI valued at fair value in SOTP."
+  remainco: "Ratings, Market Intelligence, Commodity Insights, and S&P DJ Indices — higher-margin, less cyclical franchises remain."
+  guidance: "Organic cc revenue +6-8%; adj diluted EPS $19.40-$19.65; +50-75bps margin. GAAP guidance to be reset post-spin."
+
+fcf:
+  fy_fcf: 5490
+  capital_returned: 6200
+  fy_ebitda_anchor: 7855
+  e_interest: -445
+  e_interest_y2: -435
+  tax_rate: 0.22
+  capex: -210
+  capex_y2: -225
+  wc: -150
+  wc_y2: -160
+  y2_growth: 0.07
+  fcf_note: "FY25 capital return $6.2B = 113% of adj FCF -> adj FCF ~$5.49B."
+  fcf_footnote: "Post-spin, ~$700M of Mobility EBITDA and ~$110M interest leave with MBGL; RemainCo FCF conversion rises as the highest-margin franchises remain."
+
+street:
+  analysts: 22
+  rating: "Strong Buy / Buy"
+  target: 538
+  high: 600
+  low: 470
+  fy26_rev: 16450
+  fy26_ebitda: 8500
+  catalysts:
+    - ["6/26-30/26", "MBGL when-issued trading begins (MBGL WI)"]
+    - ["7/1/26", "Mobility Global distribution (1-for-1); SPGI ex-distribution"]
+    - ["Late Jul 2026", "Q2 2026 earnings; first post-spin standalone framing & updated guidance"]
+    - ["2H 2026", "RemainCo capital-return update; index/ratings momentum"]
+    - ["Ongoing", "OSTTRA sale completion; AI product monetization"]
+
+sensitivity:
+  row_segment: Ratings
+  col_segment: S&P DJ Indices
+  row_steps: [18.5, 19.25, 20, 20.75, 21.5, 22.25, 23, 23.75, 24.5]
+  col_steps: [21, 22, 23, 24, 25, 26, 27, 28, 29]
+
+trends:
+  quarters: ["Q1'25", "Q2'25", "Q3'25", "Q4'25", "Q1'26"]
+  revenue: [3777, 3650, 3640, 3916, 4171]
+  op_margin: [0.42, 0.47, 0.47, 0.45, 0.48]
+  adj_eps: [3.54, 4.2, 4.43, 4.3, 4.69]
+  seg_growth:
+    Ratings: 0.13
+    Market Intelligence: 0.08
+    Commodity Insights (Energy): 0.07
+    Mobility: 0.08
+    S&P DJ Indices: 0.17
