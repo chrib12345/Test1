@@ -1,0 +1,63 @@
+# Seed watchlist. Synced into the `companies` table on startup (upsert by
+# ticker + ats_token). 25-100 public companies is the intended range.
+#
+# Fields per entry:
+#   ticker      : exchange ticker (nullable for private/subsidiary boards)
+#   name        : display name
+#   ats_type    : one of greenhouse | lever | ashby | workable | custom
+#   ats_token   : board token / client slug (see per-adapter docs)
+#   careers_url : public careers page (used by the custom fallback / for humans)
+#   notes       : free text; the ingest layer appends fragility notes here
+#
+# NOTE: ats_token values below are illustrative and MUST be verified against a
+# live sample before trusting the data (Section 0.2). Tokens drift when a
+# company migrates ATS. Verify with:  hiring-tracker verify-adapter <ticker>
+
+companies:
+  - ticker: null
+    name: Stripe
+    ats_type: greenhouse
+    ats_token: stripe
+    careers_url: https://stripe.com/jobs
+
+  - ticker: null
+    name: Databricks
+    ats_type: greenhouse
+    ats_token: databricks
+    careers_url: https://www.databricks.com/company/careers
+
+  - ticker: null
+    name: Anthropic
+    ats_type: greenhouse
+    ats_token: anthropic
+    careers_url: https://www.anthropic.com/careers
+
+  - ticker: NET
+    name: Cloudflare
+    ats_type: greenhouse
+    ats_token: cloudflare
+    careers_url: https://www.cloudflare.com/careers
+
+  - ticker: null
+    name: Netflix
+    ats_type: lever
+    ats_token: netflix
+    careers_url: https://jobs.netflix.com
+
+  - ticker: null
+    name: Plaid
+    ats_type: lever
+    ats_token: plaid
+    careers_url: https://plaid.com/careers
+
+  - ticker: null
+    name: Notion
+    ats_type: ashby
+    ats_token: notion
+    careers_url: https://www.notion.so/careers
+
+  - ticker: null
+    name: Linear
+    ats_type: ashby
+    ats_token: linear
+    careers_url: https://linear.app/careers
