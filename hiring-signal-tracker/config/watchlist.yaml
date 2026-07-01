@@ -1,63 +1,53 @@
-# Seed watchlist. Synced into the `companies` table on startup (upsert by
+# Watchlist. Synced into the `companies` table on startup (upsert by
 # ticker + ats_token). 25-100 public companies is the intended range.
 #
 # Fields per entry:
 #   ticker      : exchange ticker (nullable for private/subsidiary boards)
 #   name        : display name
 #   ats_type    : one of greenhouse | lever | ashby | workable | custom
-#   ats_token   : board token / client slug (see per-adapter docs)
+#   ats_token   : board token / client slug (see per-adapter docs).
+#                 For ats_type=custom this is a label only; the fetch uses careers_url.
 #   careers_url : public careers page (used by the custom fallback / for humans)
 #   notes       : free text; the ingest layer appends fragility notes here
 #
-# NOTE: ats_token values below are illustrative and MUST be verified against a
-# live sample before trusting the data (Section 0.2). Tokens drift when a
-# company migrates ATS. Verify with:  hiring-tracker verify-adapter <ticker>
+# NOTE: ats_token values MUST be verified against a live sample before trusting
+# the data (Section 0.2). Tokens drift when a company migrates ATS.
+# Verify with:  hiring-tracker verify-adapter <ticker>
 
 companies:
-  - ticker: null
-    name: Stripe
+  # --- WGS: GeneDx Holdings (Nasdaq: WGS) ---
+  # Research indicates GeneDx uses Greenhouse. Board token proposed as `genedx`
+  # but UNVERIFIED from the build environment (egress blocked). Confirm with:
+  #   hiring-tracker verify-adapter WGS
+  - ticker: WGS
+    name: GeneDx Holdings
     ats_type: greenhouse
-    ats_token: stripe
-    careers_url: https://stripe.com/jobs
+    ats_token: genedx
+    careers_url: https://www.genedx.com/careers/openings
+    notes: "UNVERIFIED greenhouse token 'genedx' — confirm with verify-adapter before trusting data."
 
-  - ticker: null
-    name: Databricks
-    ats_type: greenhouse
-    ats_token: databricks
-    careers_url: https://www.databricks.com/company/careers
+  # --- TSLA: Tesla (Nasdaq: TSLA) ---
+  # Tesla runs a proprietary in-house careers system (Careers User Application /
+  # cua-api at tesla.com/careers), not a third-party ATS. Routed to the custom
+  # fallback. WARNING: the careers site is a JS-rendered SPA and may expose no
+  # schema.org JobPosting JSON-LD, in which case the fallback returns zero
+  # postings and flags the company fragile. A Tesla-specific adapter against
+  # its cua-api would be needed for reliable data.
+  - ticker: TSLA
+    name: Tesla
+    ats_type: custom
+    ats_token: tesla
+    careers_url: https://www.tesla.com/careers/search
+    notes: "Proprietary in-house ATS (cua-api); custom fallback may not parse the SPA — data fragile/likely unavailable without a dedicated adapter."
 
-  - ticker: null
-    name: Anthropic
-    ats_type: greenhouse
-    ats_token: anthropic
-    careers_url: https://www.anthropic.com/careers
-
-  - ticker: NET
-    name: Cloudflare
-    ats_type: greenhouse
-    ats_token: cloudflare
-    careers_url: https://www.cloudflare.com/careers
-
-  - ticker: null
-    name: Netflix
-    ats_type: lever
-    ats_token: netflix
-    careers_url: https://jobs.netflix.com
-
-  - ticker: null
-    name: Plaid
-    ats_type: lever
-    ats_token: plaid
-    careers_url: https://plaid.com/careers
-
-  - ticker: null
-    name: Notion
-    ats_type: ashby
-    ats_token: notion
-    careers_url: https://www.notion.so/careers
-
-  - ticker: null
-    name: Linear
-    ats_type: ashby
-    ats_token: linear
-    careers_url: https://linear.app/careers
+  # --- REZI: Resideo Technologies (NYSE: REZI) ---
+  # Honeywell spinoff; careers most likely on Workday, which has no native
+  # adapter here. Routed to the custom fallback against the careers page.
+  # A Workday adapter (or the exact myworkdayjobs.com tenant URL) is needed for
+  # reliable data. Confirm the real job-board URL with verify-adapter.
+  - ticker: REZI
+    name: Resideo Technologies
+    ats_type: custom
+    ats_token: resideo
+    careers_url: https://www.resideo.com/us/en/corporate/about/careers/
+    notes: "Likely Workday (no native adapter); custom fallback against careers page — verify real board URL before trusting data."
